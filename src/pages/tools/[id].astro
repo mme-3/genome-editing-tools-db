@@ -1,0 +1,143 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import AtAGlance from '../../components/AtAGlance.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('tools');
+  return entries.map((entry) => ({
+    params: { id: entry.data.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const tool = entry.data;
+const { Content } = await render(entry);
+
+const entries = await getCollection('tools');
+const byId = new Map(entries.map((e) => [e.data.id, e.data]));
+const competing = tool.competing_tools.map((id) => ({ id, name: byId.get(id)?.name ?? id }));
+const related = tool.related_tools.map((id) => ({ id, name: byId.get(id)?.name ?? id }));
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title={tool.name} description={tool.description}>
+  <p><a href={`${base}tools/`}>&larr; Back to browse</a></p>
+  <h1>{tool.name}</h1>
+  <p class="category-line">
+    {tool.category}
+    {tool.secondary_categories.length > 0 && ` · also: ${tool.secondary_categories.join(', ')}`}
+  </p>
+
+  <p class="description">{tool.description}</p>
+
+  <h2>At a glance</h2>
+  <AtAGlance tool={tool} />
+
+  {tool.publication && tool.publication.title && (
+    <>
+      <h2>Publication</h2>
+      <p>
+        {tool.publication.title}. <em>{tool.publication.venue}</em>{tool.publication.year && `, ${tool.publication.year}`}.
+        {tool.publication.doi && <> DOI: <a href={`https://doi.org/${tool.publication.doi}`} target="_blank" rel="noopener">{tool.publication.doi}</a>.</>}
+      </p>
+      {tool.citations && (
+        <p class="citations-note">
+          <strong>Citations:</strong> {tool.citations.count ?? 'unknown'} ({tool.citations.source}{tool.citations.as_of && `, as of ${tool.citations.as_of}`})
+          {tool.citations.note && ` — ${tool.citations.note}`}
+        </p>
+      )}
+    </>
+  )}
+
+  {tool.strengths.length > 0 && (
+    <>
+      <h2>Strengths</h2>
+      <ul>{tool.strengths.map((s) => <li>{s}</li>)}</ul>
+    </>
+  )}
+
+  {tool.weaknesses.length > 0 && (
+    <>
+      <h2>Weaknesses</h2>
+      <ul>{tool.weaknesses.map((w) => <li>{w}</li>)}</ul>
+    </>
+  )}
+
+  {tool.ideal_use_cases.length > 0 && (
+    <>
+      <h2>Ideal use cases</h2>
+      <ul>{tool.ideal_use_cases.map((u) => <li>{u}</li>)}</ul>
+    </>
+  )}
+
+  {tool.limitations.length > 0 && (
+    <>
+      <h2>Limitations</h2>
+      <ul>{tool.limitations.map((l) => <li>{l}</li>)}</ul>
+    </>
+  )}
+
+  {competing.length > 0 && (
+    <>
+      <h2>Competing tools</h2>
+      <ul>{competing.map((c) => <li>{byId.has(c.id) ? <a href={`${base}tools/${c.id}/`}>{c.name}</a> : <>{c.name} <span class="badge">no profile yet</span></>}</li>)}</ul>
+    </>
+  )}
+
+  {related.length > 0 && (
+    <>
+      <h2>Related tools</h2>
+      <ul>{related.map((r) => <li>{byId.has(r.id) ? <a href={`${base}tools/${r.id}/`}>{r.name}</a> : <>{r.name} <span class="badge">no profile yet</span></>}</li>)}</ul>
+    </>
+  )}
+
+  {tool.superseded_by && (
+    <p class="superseded-note">
+      Superseded by {byId.has(tool.superseded_by) ? <a href={`${base}tools/${tool.superseded_by}/`}>{byId.get(tool.superseded_by)?.name}</a> : tool.superseded_by}.
+    </p>
+  )}
+
+  {tool.state_of_the_art && (
+    <>
+      <h2>State of the art</h2>
+      <p>{tool.state_of_the_art.rationale} <span class="as-of">(as of {tool.state_of_the_art.as_of})</span></p>
+    </>
+  )}
+
+  <div class="prose">
+    <Content />
+  </div>
+
+  {tool.verification_notes && (
+    <>
+      <h2>Verification notes</h2>
+      <p class="verification-notes">{tool.verification_notes} <span class="as-of">Last verified {tool.verified_on}.</span></p>
+    </>
+  )}
+
+  <p class="tags-line">
+    {tool.tags.map((tag) => <span class="tag">{tag}</span>)}
+  </p>
+</Base>
+
+<style>
+  .category-line {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+  }
+  .description {
+    font-size: 1.05rem;
+  }
+  .citations-note, .verification-notes {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+  }
+  .as-of {
+    color: var(--color-text-muted);
+  }
+  .tags-line {
+    margin-top: 2rem;
+  }
+</style>

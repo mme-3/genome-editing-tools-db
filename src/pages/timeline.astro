@@ -1,0 +1,65 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const entries = await getCollection('tools');
+const tools = entries.map((e) => e.data);
+const base = import.meta.env.BASE_URL;
+
+const withYear = tools.filter((t) => t.publication?.year);
+const undated = tools.filter((t) => !t.publication?.year);
+
+const byYear = new Map<number, typeof tools>();
+for (const tool of withYear) {
+  const year = tool.publication!.year!;
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(tool);
+}
+const years = [...byYear.keys()].sort((a, b) => a - b);
+---
+
+<Base title="Timeline" description="Computational genome editing tool releases by publication year.">
+  <h1>Timeline</h1>
+  <p>Tool releases ordered by the year of their primary publication.</p>
+
+  <div class="timeline">
+    {years.map((year) => (
+      <div class="timeline-year">
+        <h2>{year}</h2>
+        <ul>
+          {byYear.get(year)!.sort((a, b) => a.name.localeCompare(b.name)).map((tool) => (
+            <li>
+              <a href={`${base}tools/${tool.id}/`}>{tool.name}</a>
+              — {tool.publication?.venue}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+
+  {undated.length > 0 && (
+    <section>
+      <h2>Undated</h2>
+      <p>No publication year on record.</p>
+      <ul>
+        {undated.map((tool) => <li><a href={`${base}tools/${tool.id}/`}>{tool.name}</a></li>)}
+      </ul>
+    </section>
+  )}
+</Base>
+
+<style>
+  .timeline-year {
+    margin-bottom: 1.5rem;
+  }
+  .timeline-year h2 {
+    border-left: 3px solid var(--color-accent);
+    padding-left: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .timeline-year ul {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+</style>

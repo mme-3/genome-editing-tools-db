@@ -1,0 +1,53 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const entries = await getCollection('tools');
+const categories = new Set(entries.map((e) => e.data.category));
+const base = import.meta.env.BASE_URL;
+---
+
+<Base title="Home">
+  <h1>Genome Editing Tools</h1>
+  <p class="lede">
+    A maintainable reference for computational genome editing tools — guide RNA design,
+    off-target prediction, and (over time) every stage of a CRISPR experiment. Currently
+    tracking <strong>{entries.length} tools</strong> across <strong>{categories.size} categories</strong>.
+  </p>
+
+  <div class="home-links">
+    <a class="button" href={`${base}tools/`}>Browse all tools</a>
+    <a class="button button-secondary" href={`${base}start-here/`}>New here? Start here</a>
+    <a class="button button-secondary" href={`${base}workflow/`}>Explore by workflow stage</a>
+    <a class="button button-secondary" href={`${base}timeline/`}>See the release timeline</a>
+  </div>
+
+  <h2>What's here</h2>
+  <ul>
+    <li><strong>Browse</strong> — global search and faceted filtering by modality, category, platform, license, maintenance status, and AI-enabled vs traditional.</li>
+    <li><strong>Compare</strong> — pick up to four tools and see them side by side.</li>
+    <li><strong>Workflow</strong> — which tools fit each stage of a genome editing experiment.</li>
+    <li><strong>Timeline</strong> — tool releases by publication year.</li>
+  </ul>
+
+  <p>
+    Each tool is a single Markdown file with structured frontmatter (see
+    <a href="https://github.com/mme-3/genome-editing-tools-db/blob/main/schema/tool-profile.schema.json">the schema</a>)
+    validated at build time. Want to add a tool? See
+    <a href="https://github.com/mme-3/genome-editing-tools-db/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a>.
+  </p>
+</Base>
+
+<style>
+  .lede {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    max-width: 42rem;
+  }
+  .home-links {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 1.5rem 0 2.5rem;
+  }
+</style>

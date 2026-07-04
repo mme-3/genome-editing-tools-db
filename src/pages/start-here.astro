@@ -1,0 +1,82 @@
+---
+import { getEntry } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const base = import.meta.env.BASE_URL;
+
+const picks = [
+  {
+    question: "I've never designed a guide RNA before — where do I start?",
+    id: 'crispor',
+    why: "The most widely used general-purpose web tool. Paste a sequence, pick a genome, and it ranks guides using several published scoring methods at once — a good default before you need anything specialized.",
+  },
+  {
+    question: 'I want a more visual, gene-map-based design experience.',
+    id: 'chopchop',
+    why: 'Plots candidate guides directly on the gene model and supports knockout, knock-in, CRISPRi/a, and base editing goals in one interface.',
+  },
+  {
+    question: 'I need to check a guide for off-target risk.',
+    id: 'cas-offinder',
+    why: 'The standard exhaustive off-target enumeration engine. Pair its output with the CFD score to rank the sites it finds by cleavage likelihood.',
+  },
+  {
+    question: "I'm designing a genome-wide screen or a guide library.",
+    id: 'guidescan2',
+    why: 'Built specifically for genome-wide, high-specificity guide databases and library design, with allele-specific support for hybrid genomes.',
+  },
+  {
+    question: 'My work has therapeutic or clinical relevance and population variation matters.',
+    id: 'crisprme',
+    why: 'The current reference for variant- and haplotype-aware off-target nomination — surfaces off-targets created by common human genetic variants that a reference-only search would miss.',
+  },
+  {
+    question: "I'd rather use a hosted platform with no setup and team collaboration.",
+    id: 'benchling',
+    why: 'A commercial cloud platform with guide design integrated alongside sequence management, primers, and lab notebook — trades transparency for convenience and collaboration.',
+  },
+];
+
+const resolved = await Promise.all(
+  picks.map(async (pick) => ({ ...pick, entry: await getEntry('tools', pick.id) }))
+);
+---
+
+<Base title="Start here" description="Recommended starting points for newcomers to computational genome editing tools.">
+  <h1>Recommended starting points</h1>
+  <p>
+    New to this space? Here are sensible defaults for common situations. Every tool here has a
+    full profile — click through for details, and use <a href={`${base}tools/`}>Browse</a> once
+    you know what you're looking for.
+  </p>
+
+  <div class="picks">
+    {resolved.map(({ question, why, entry }) => entry && (
+      <section class="pick">
+        <h2>{question}</h2>
+        <p class="pick-tool"><a href={`${base}tools/${entry.data.id}/`}>{entry.data.name}</a></p>
+        <p>{why}</p>
+      </section>
+    ))}
+  </div>
+</Base>
+
+<style>
+  .picks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .pick {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .pick h2 {
+    font-size: 1.05rem;
+  }
+  .pick-tool {
+    font-weight: 600;
+    margin: 0.25rem 0;
+  }
+</style>

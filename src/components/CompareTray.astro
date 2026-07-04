@@ -1,0 +1,93 @@
+---
+const base = import.meta.env.BASE_URL;
+---
+
+<div id="compare-tray" class="compare-tray" hidden>
+  <span id="compare-count"></span>
+  <a id="compare-link" class="button" href="#">Compare selected</a>
+  <button type="button" id="compare-clear" class="button-secondary button">Clear</button>
+</div>
+
+<style>
+  .compare-tray {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 10;
+  }
+  .compare-tray[hidden] {
+    display: none;
+  }
+</style>
+
+<script define:vars={{ base }}>
+  const STORAGE_KEY = 'compareIds';
+  const MAX_COMPARE = 4;
+
+  function getSelected() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'));
+    } catch {
+      return new Set();
+    }
+  }
+
+  function setSelected(ids) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...ids]));
+    renderTray();
+  }
+
+  function renderTray() {
+    const ids = getSelected();
+    const tray = document.getElementById('compare-tray');
+    const count = document.getElementById('compare-count');
+    const link = document.getElementById('compare-link');
+    if (!tray || !count || !link) return;
+    if (ids.size === 0) {
+      tray.hidden = true;
+      return;
+    }
+    tray.hidden = false;
+    count.textContent = `${ids.size} selected`;
+    link.href = `${base}compare/?ids=${[...ids].join(',')}`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const selected = getSelected();
+    document.querySelectorAll('.compare-checkbox').forEach((checkbox) => {
+      const id = checkbox.dataset.id;
+      checkbox.checked = selected.has(id);
+      checkbox.addEventListener('change', () => {
+        const current = getSelected();
+        if (checkbox.checked) {
+          if (current.size >= MAX_COMPARE) {
+            checkbox.checked = false;
+            alert(`You can compare up to ${MAX_COMPARE} tools at a time.`);
+            return;
+          }
+          current.add(id);
+        } else {
+          current.delete(id);
+        }
+        setSelected(current);
+      });
+    });
+    renderTray();
+
+    document.getElementById('compare-clear')?.addEventListener('click', () => {
+      setSelected(new Set());
+      document.querySelectorAll('.compare-checkbox').forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+    });
+  });
+</script>

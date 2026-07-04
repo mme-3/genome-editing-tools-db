@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { orderedStageNames, stageForCategory } from '../lib/stageOrder';
+
+const entries = await getCollection('tools');
+const tools = entries.map((e) => e.data).sort((a, b) => a.name.localeCompare(b.name));
+const base = import.meta.env.BASE_URL;
+
+const byStage = new Map<string, Map<string, typeof tools>>();
+for (const tool of tools) {
+  const stage = stageForCategory(tool.category);
+  if (!byStage.has(stage)) byStage.set(stage, new Map());
+  const byCategory = byStage.get(stage)!;
+  if (!byCategory.has(tool.category)) byCategory.set(tool.category, []);
+  byCategory.get(tool.category)!.push(tool);
+}
+
+const stageNames = orderedStageNames().filter((name) => byStage.has(name));
+---
+
+<Base title="Workflow explorer" description="Which computational genome editing tools fit each stage of an experiment.">
+  <h1>Workflow explorer</h1>
+  <p>Tools grouped by where they fit in a genome editing experiment, from planning through validation.</p>
+
+  {stageNames.map((stageName) => (
+    <section class="stage-section">
+      <h2>{stageName}</h2>
+      {[...byStage.get(stageName)!.entries()].map(([category, categoryTools]) => (
+        <div class="category-group">
+          <h3>{category}</h3>
+          <ul>
+            {categoryTools.map((tool) => (
+              <li>
+                <a href={`${base}tools/${tool.id}/`}>{tool.name}</a>
+                <span class="badge">{tool.maintenance_status}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+  ))}
+</Base>
+
+<style>
+  .stage-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .category-group {
+    margin: 0.75rem 0 1rem 1rem;
+  }
+  .category-group h3 {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.35rem;
+  }
+  .category-group ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+  .category-group li {
+    margin-bottom: 0.25rem;
+  }
+  .category-group .badge {
+    margin-left: 0.5rem;
+  }
+</style>

@@ -1,0 +1,58 @@
+---
+interface FacetGroup {
+  key: string;
+  label: string;
+  options: string[];
+}
+
+interface Props {
+  facets: FacetGroup[];
+}
+
+const { facets } = Astro.props;
+---
+
+<form id="facet-filters" class="facet-filters">
+  {facets.map((group) => (
+    <fieldset data-facet-group={group.key}>
+      <legend>{group.label}</legend>
+      {group.options.map((option) => (
+        <label class="facet-option">
+          <input type="checkbox" data-facet={group.key} value={option} />
+          {option}
+        </label>
+      ))}
+    </fieldset>
+  ))}
+  <button type="button" id="clear-filters" class="button-secondary button">Clear filters</button>
+</form>
+
+<style>
+  .facet-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .facet-filters fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+  }
+  .facet-filters legend {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.35rem;
+    padding: 0;
+  }
+  .facet-option {
+    display: block;
+    font-size: 0.9rem;
+    padding: 0.15rem 0;
+  }
+  #clear-filters {
+    align-self: flex-start;
+  }
+</style>

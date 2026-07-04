@@ -1,0 +1,33 @@
+---
+import type { Tool } from '../lib/schema';
+
+interface Props {
+  tool: Tool;
+}
+
+const { tool } = Astro.props;
+---
+
+<table class="at-a-glance">
+  <tbody>
+    <tr><th>Supported editors</th><td>{tool.supported_editors.join(', ') || '—'}</td></tr>
+    <tr><th>Platform</th><td>{tool.platform.join(', ') || '—'}</td></tr>
+    <tr>
+      <th>Web interface</th>
+      <td>
+        {tool.web_interface?.available
+          ? (tool.web_interface.url
+              ? <a href={tool.web_interface.url} target="_blank" rel="noopener">{tool.web_interface.url}</a>
+              : 'Yes')
+          : 'No'}
+        {tool.web_interface?.login_required ? ' (login required)' : ''}
+      </td>
+    </tr>
+    <tr><th>Installation</th><td>{tool.installation ?? '—'}</td></tr>
+    <tr><th>License</th><td>{tool.license ?? '—'}</td></tr>
+    <tr><th>Maintenance status</th><td>{tool.maintenance_status}</td></tr>
+    <tr><th>GitHub</th><td>{tool.github?.available && tool.github.url ? <a href={tool.github.url} target="_blank" rel="noopener">{tool.github.url}</a> : 'Not open source'}</td></tr>
+    <tr><th>Documentation</th><td>{tool.documentation ? <a href={tool.documentation} target="_blank" rel="noopener">{tool.documentation}</a> : '—'}</td></tr>
+    <tr><th>AI-enabled</th><td>{tool.ai_enabled ? 'Yes' : 'No'}</td></tr>
+  </tbody>
+</table>

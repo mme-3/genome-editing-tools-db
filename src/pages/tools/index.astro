@@ -1,0 +1,146 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import FacetFilters from '../../components/FacetFilters.astro';
+import SearchBox from '../../components/SearchBox.astro';
+import CompareTray from '../../components/CompareTray.astro';
+
+const entries = await getCollection('tools');
+const tools = entries.map((e) => e.data).sort((a, b) => a.name.localeCompare(b.name));
+
+function distinct(values: string[]): string[] {
+  return [...new Set(values)].sort();
+}
+
+const facets = [
+  { key: 'category', label: 'Category', options: distinct(tools.map((t) => t.category)) },
+  { key: 'editors', label: 'Editing modality', options: distinct(tools.flatMap((t) => t.supported_editors)) },
+  { key: 'platform', label: 'Platform', options: distinct(tools.flatMap((t) => t.platform)) },
+  { key: 'license', label: 'License', options: distinct(tools.map((t) => t.license ?? 'Unknown')) },
+  { key: 'maintenance', label: 'Maintenance status', options: distinct(tools.map((t) => t.maintenance_status)) },
+  { key: 'ai', label: 'AI-enabled vs traditional', options: ['AI-enabled', 'Traditional'] },
+];
+---
+
+<Base title="Browse tools" description="Search and filter computational genome editing tools by modality, category, platform, license, and maintenance status.">
+  <h1>Browse tools</h1>
+  <p>{tools.length} tools indexed. Search by name, alias, tag, or publication, or narrow by facet.</p>
+
+  <div class="browse-layout">
+    <aside class="browse-sidebar">
+      <FacetFilters facets={facets} />
+    </aside>
+    <div class="browse-main">
+      <SearchBox />
+      <p id="result-count" class="result-count"></p>
+      <div id="tool-grid" class="tool-grid">
+        {tools.map((tool) => <ToolCard tool={tool} />)}
+      </div>
+      <p id="no-results" class="no-results" hidden>No tools match the current filters.</p>
+    </div>
+  </div>
+
+  <CompareTray />
+</Base>
+
+<style>
+  .browse-layout {
+    display: grid;
+    grid-template-columns: 14rem 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  .browse-sidebar {
+    position: sticky;
+    top: 1rem;
+  }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .result-count {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    margin: 0.75rem 0 0;
+  }
+  .no-results {
+    color: var(--color-text-muted);
+    margin-top: 2rem;
+  }
+  @media (max-width: 48rem) {
+    .browse-layout {
+      grid-template-columns: 1fr;
+    }
+    .browse-sidebar {
+      position: static;
+    }
+  }
+</style>
+
+<script>
+  function normalizeAiValue(value: string): string {
+    return value === 'AI-enabled' ? 'true' : 'false';
+  }
+
+  function applyFilters() {
+    const searchInput = document.getElementById('tool-search') as HTMLInputElement | null;
+    const query = (searchInput?.value ?? '').trim().toLowerCase();
+
+    const groups = new Map<string, Set<string>>();
+    document.querySelectorAll<HTMLInputElement>('[data-facet]').forEach((checkbox) => {
+      const key = checkbox.dataset.facet!;
+      if (!groups.has(key)) groups.set(key, new Set());
+      if (checkbox.checked) {
+        const value = key === 'ai' ? normalizeAiValue(checkbox.value) : checkbox.value;
+        groups.get(key)!.add(value);
+      }
+    });
+
+    const cards = document.querySelectorAll<HTMLElement>('.tool-card');
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+      let visible = true;
+
+      if (query && !card.dataset.search!.includes(query)) {
+        visible = false;
+      }
+
+      if (visible) {
+        for (const [key, selected] of groups) {
+          if (selected.size === 0) continue;
+          const cardValues = (card.dataset[key] ?? '').split('|');
+          const matches = [...selected].some((v) => cardValues.includes(v));
+          if (!matches) {
+            visible = false;
+            break;
+          }
+        }
+      }
+
+      card.hidden = !visible;
+      if (visible) visibleCount += 1;
+    });
+
+    const resultCount = document.getElementById('result-count');
+    if (resultCount) resultCount.textContent = `Showing ${visibleCount} of ${cards.length} tools`;
+
+    const noResults = document.getElementById('no-results');
+    if (noResults) noResults.hidden = visibleCount !== 0;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    applyFilters();
+    document.getElementById('tool-search')?.addEventListener('input', applyFilters);
+    document.querySelectorAll('[data-facet]').forEach((el) => el.addEventListener('change', applyFilters));
+    document.getElementById('clear-filters')?.addEventListener('click', () => {
+      document.querySelectorAll<HTMLInputElement>('[data-facet]').forEach((el) => (el.checked = false));
+      const searchInput = document.getElementById('tool-search') as HTMLInputElement | null;
+      if (searchInput) searchInput.value = '';
+      applyFilters();
+    });
+  });
+</script>
