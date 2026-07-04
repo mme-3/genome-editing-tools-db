@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genome-editing-tools.org/schema/tool-profile.schema.json",
+  "title": "Genome Editing Tool Profile",
+  "description": "Canonical record for a single computational genome editing tool. One object per tool. Mirrors the Markdown page one to one. Volatile fields (citations, last_known_update, maintenance_status, state_of_the_art) carry a verified_on date so staleness is auditable.",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "category",
+    "description",
+    "supported_editors",
+    "maintenance_status",
+    "verified_on"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "URL-safe stable identifier, lowercase kebab-case. Never reused. Example: crispor",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name as the authors write it."
+    },
+    "aka": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Alternate names, former names, or common misspellings, for search."
+    },
+    "category": {
+      "type": "string",
+      "description": "Primary Phase 1 taxonomy category (single value). Example: Guide RNA Design"
+    },
+    "secondary_categories": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Other categories this tool legitimately belongs to. Drives cross-linking."
+    },
+    "description": {
+      "type": "string",
+      "description": "Two to four sentence factual summary of what the tool does. No marketing language."
+    },
+    "supported_editors": {
+      "type": "array",
+      "description": "Editing modalities the tool supports.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "Cas9",
+          "Cas12a",
+          "Cas12 (other)",
+          "Cas13",
+          "Base editing (CBE)",
+          "Base editing (ABE)",
+          "Prime editing",
+          "CRISPRa",
+          "CRISPRi",
+          "Epigenome editing",
+          "RNA editing",
+          "TALEN",
+          "ZFN",
+          "Modality-agnostic"
+        ]
+      }
+    },
+    "installation": {
+      "type": "string",
+      "description": "How to install or access. Include package manager command if applicable (pip, conda, CRAN, Bioconductor), or 'Web only', or 'No install (hosted)'."
+    },
+    "web_interface": {
+      "type": "object",
+      "properties": {
+        "available": { "type": "boolean" },
+        "url": { "type": ["string", "null"], "format": "uri" },
+        "login_required": { "type": ["boolean", "null"] }
+      },
+      "required": ["available"]
+    },
+    "license": {
+      "type": "string",
+      "description": "SPDX identifier where possible (MIT, GPL-3.0, BSD-3-Clause, Apache-2.0), or 'Proprietary', or 'Academic/non-commercial', or 'Unknown'."
+    },
+    "platform": {
+      "type": "array",
+      "description": "Where it runs.",
+      "items": {
+        "type": "string",
+        "enum": ["Web", "Linux", "macOS", "Windows", "Python", "R", "Java", "Command line", "Cloud", "API", "Desktop GUI"]
+      }
+    },
+    "maintenance_status": {
+      "type": "string",
+      "enum": ["Active", "Legacy", "Superseded", "Experimental", "Abandoned", "Unknown"],
+      "description": "Active = updated within ~18 months or clearly supported. Legacy = stable and still used but not actively developed. Superseded = a direct successor exists. Experimental = research preview. Abandoned = no signal of maintenance and known issues."
+    },
+    "superseded_by": {
+      "type": ["string", "null"],
+      "description": "id of the successor tool, if maintenance_status is Superseded."
+    },
+    "publication": {
+      "type": "object",
+      "description": "Primary describing publication.",
+      "properties": {
+        "title": { "type": ["string", "null"] },
+        "venue": { "type": ["string", "null"] },
+        "year": { "type": ["integer", "null"] },
+        "doi": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] }
+      }
+    },
+    "citations": {
+      "type": "object",
+      "description": "Citation count is volatile. Always store the number WITH its source and date.",
+      "properties": {
+        "count": { "type": ["integer", "null"] },
+        "source": { "type": "string", "description": "e.g. Google Scholar, Crossref, Semantic Scholar" },
+        "as_of": { "type": ["string", "null"], "format": "date" },
+        "note": { "type": "string" }
+      }
+    },
+    "github": {
+      "type": "object",
+      "properties": {
+        "available": { "type": "boolean" },
+        "url": { "type": ["string", "null"], "format": "uri" },
+        "stars": { "type": ["integer", "null"] },
+        "last_commit": { "type": ["string", "null"], "format": "date" }
+      },
+      "required": ["available"]
+    },
+    "documentation": {
+      "type": ["string", "null"],
+      "description": "URL to docs, wiki, or tutorial. Null if none beyond the paper."
+    },
+    "strengths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Bullet-length factual advantages."
+    },
+    "weaknesses": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ideal_use_cases": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "limitations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Hard boundaries: organisms, editor types, scale, or access constraints it cannot handle."
+    },
+    "competing_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ids of tools that solve the same problem and would be chosen instead of this one."
+    },
+    "related_tools": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "ids of tools commonly used alongside this one in a workflow (complementary, not competing)."
+    },
+    "example_workflow": {
+      "type": "string",
+      "description": "Short numbered or prose walkthrough of a canonical use, input to output."
+    },
+    "screenshots": {
+      "type": "array",
+      "description": "Publicly available screenshots or figures. Store URL and source attribution only; do not rehost without checking license.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string" },
+          "caption": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "notable_publications_using": {
+      "type": "array",
+      "description": "High-profile papers that USED the tool (distinct from the tool's own paper).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "citation": { "type": "string" },
+          "doi": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "last_known_update": {
+      "type": ["string", "null"],
+      "format": "date",
+      "description": "Most recent evidence of development: release, commit, or web tool refresh. Pair with verified_on."
+    },
+    "state_of_the_art": {
+      "type": "object",
+      "description": "Whether the tool is still a leading choice for its task, as of the verification date. This is a judgment, so record the reasoning.",
+      "properties": {
+        "is_sota": { "type": ["boolean", "null"] },
+        "rationale": { "type": "string" },
+        "as_of": { "type": ["string", "null"], "format": "date" }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-form facets for filtering: organism scope, interface type, algorithm family, etc. See tag vocabulary."
+    },
+    "ai_enabled": {
+      "type": "boolean",
+      "description": "True if the tool's core method relies on a trained machine learning or deep learning model (e.g. a learned scoring model), as opposed to a purely rule-based, statistical, or brute-force algorithm. Drives the AI-enabled vs traditional facet."
+    },
+    "verified_on": {
+      "type": "string",
+      "format": "date",
+      "description": "Date a human or agent last checked the volatile fields against primary sources."
+    },
+    "verification_notes": {
+      "type": "string",
+      "description": "What was and was not verified, and where numbers still need a manual pull."
+    }
+  }
+}
